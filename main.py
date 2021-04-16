@@ -65,6 +65,8 @@ def kinfu_omz_demo():
     exec_net = ie.load_network(network=net, device_name=args.device)
     rgb_list = getRGBlist(args.input)
     params = cv2.kinfu_Params.defaultParams()
+    params.depthFactor = 10000  # 5000
+    params.voxelSize = 0.008  # 0.0058...
     kf = cv2.kinfu_KinFu.create(params)
 
 ## =================================================================
@@ -82,18 +84,18 @@ def kinfu_omz_demo():
     res = exec_net.infer(inputs={input_blob: image_input})
     disp = np.squeeze(res[out_blob][0])
     disp = cv2.resize(disp, (input_width, input_height), cv2.INTER_CUBIC)
+
+    depth = disp.copy()
+
     disp_min = disp.min()
     disp_max = disp.max()
-
     if disp_max - disp_min > 1e-6:
         disp = (disp - disp_min) / (disp_max - disp_min)
     else:
         disp.fill(0.5)
-
     cv2.imshow('output', disp)
     cv2.waitKey(1)
 
-    depth = disp.copy()
     tmp = kf.update(depth)
     if not tmp:
         kf.reset()
@@ -118,20 +120,21 @@ def kinfu_omz_demo():
         res = exec_net.infer(inputs={input_blob: image_input})
         disp = np.squeeze(res[out_blob][0])
         disp = cv2.resize(disp, (input_width, input_height), cv2.INTER_CUBIC)
+
+        depth = disp.copy()
+
         disp_min = disp.min()
         disp_max = disp.max()
-
         if disp_max - disp_min > 1e-6:
             disp = (disp - disp_min) / (disp_max - disp_min)
         else:
             disp.fill(0.5)
-
         cv2.imshow('output', disp)
         cv2.waitKey(1)
 
-        depth = disp.copy()
         tmp = kf.update(depth)
         if not tmp:
+            log.info("KinFu reset()")
             kf.reset()
         else:
             size = input_height, input_width, 4
