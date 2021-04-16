@@ -6,7 +6,6 @@ from argparse import ArgumentParser
 def get_depth_list(folder):
     f = open(folder + '\\depth.txt', 'r')
     rgb = [folder + '\\' + s.replace('/', '\\') for s in f.read().split() if '.png' in s]
-    print(rgb[:5])
     return rgb
 
 def kinfu_demo():
