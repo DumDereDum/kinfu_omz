@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import time
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -105,7 +106,14 @@ def kinfu_omz_demo():
         kf.render(cvt8)
         cv2.imshow('render', cvt8)
 
+    counter = 1
+
     for s in rgb_list[1:]:
+
+        print("Frame:", counter)
+        counter+=1
+
+
 
         image = cv2.imread(s, cv2.IMREAD_COLOR)
         cv2.imshow('input', image)
@@ -117,7 +125,11 @@ def kinfu_omz_demo():
         image = image.astype(np.float32)
         image = image.transpose((2, 0, 1))
         image_input = np.expand_dims(image, 0)
+
+        t = time.time()
         res = exec_net.infer(inputs={input_blob: image_input})
+        print(" midasnet: ", time.time() - t)
+
         disp = np.squeeze(res[out_blob][0])
         disp = cv2.resize(disp, (input_width, input_height), cv2.INTER_CUBIC)
 
@@ -132,14 +144,18 @@ def kinfu_omz_demo():
         cv2.imshow('output', disp)
         cv2.waitKey(1)
 
+        t = time.time()
         tmp = kf.update(depth)
+        print(" kf.update:", time.time() - t)
         if not tmp:
             log.info("KinFu reset()")
             kf.reset()
         else:
             size = input_height, input_width, 4
             cvt8 = np.zeros(size, dtype=np.uint8)
+            t = time.time()
             kf.render(cvt8)
+            print(" kf.render:", time.time() - t)
             cv2.imshow('render', cvt8)
 
 
